@@ -1,5 +1,5 @@
 // Hylst, your refined digital butler.
-// v 0.1
+// v 0.2
 // by Hylst
 // TO DO :
 // functions to implement
@@ -86,7 +86,7 @@ void personalCalculationsMenu() {
 
         switch (choice) {
             case 1:
-                calculateAge();
+                printf("Your age is: %d years\n", calculateAge());
                 break;
             case 2:
                 printf("VAT amount: %.2f\n", calculateVAT());
@@ -166,12 +166,36 @@ void practicalToolsMenu() {
     } while (choice != 4);
 }
 
-// Functions for each feature (To be implemented)
+// Function to calculate age based on birth date
 int calculateAge() {
-    printf("Feature not implemented yet.\n");
-    return 0; // Placeholder
+    int birthYear, birthMonth, birthDay;
+    printf("Enter your birth year (YYYY): ");
+    scanf("%d", &birthYear);
+    printf("Enter your birth month (MM): ");
+    scanf("%d", &birthMonth);
+    printf("Enter your birth day (DD): ");
+    scanf("%d", &birthDay);
+
+    // Get current date
+    time_t now = time(NULL);
+    struct tm *currentDate = localtime(&now);
+
+    int currentYear = currentDate->tm_year + 1900;
+    int currentMonth = currentDate->tm_mon + 1;
+    int currentDay = currentDate->tm_mday;
+
+    // Calculate age
+    int age = currentYear - birthYear;
+
+    // Adjust if birthdate hasn't occurred yet this year
+    if (birthMonth > currentMonth || (birthMonth == currentMonth && birthDay > currentDay)) {
+        age--;
+    }
+
+    return age;
 }
 
+// Function to calculate VAT
 double calculateVAT() {
     double price, vat_rate;
     printf("Enter the price (excl. VAT): ");
@@ -181,6 +205,7 @@ double calculateVAT() {
     return price * (vat_rate / 100.0);
 }
 
+// Function to calculate loan repayment
 double calculateLoanRepayment() {
     double capital, interest_rate;
     int months;
@@ -196,6 +221,7 @@ double calculateLoanRepayment() {
     return repayment;
 }
 
+// Basic calculations (+, -, *, /)
 void basicCalculations() {
     double num1, num2;
     char operator;
@@ -227,11 +253,32 @@ void basicCalculations() {
     }
 }
 
+// Function to convert units (example: kilometers to meters)
 double convertUnits() {
-    printf("Feature not implemented yet.\n");
-    return 0; // Placeholder
+    double value;
+    int choice;
+    printf("\nUnit Conversion Options:\n");
+    printf("1. Kilometers to Meters\n");
+    printf("2. Meters to Kilometers\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter value in kilometers: ");
+            scanf("%lf", &value);
+            return value * 1000;
+        case 2:
+            printf("Enter value in meters: ");
+            scanf("%lf", &value);
+            return value / 1000;
+        default:
+            printf("Invalid choice.\n");
+            return 0;
+    }
 }
 
+// Function to calculate net salary based on gross salary and social security rate
 double netSalary() {
     double gross, social_security;
     printf("Enter gross salary: ");
@@ -241,18 +288,74 @@ double netSalary() {
     return gross * (1 - social_security / 100);
 }
 
+// Function to generate random numbers
 void generateRandomNumber() {
     srand(time(0));
     int random_num = rand();
     printf("Random number: %d\n", random_num);
 }
 
+// Function to convert time (hours to minutes and vice-versa)
 void convertTime() {
-    printf("Feature not implemented yet.\n");
+    int choice, hours, minutes;
+    printf("\nTime Conversion Options:\n");
+    printf("1. Hours to Minutes\n");
+    printf("2. Minutes to Hours\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter time in hours: ");
+            scanf("%d", &hours);
+            printf("%d hours is equivalent to %d minutes.\n", hours, hours * 60);
+            break;
+        case 2:
+            printf("Enter time in minutes: ");
+            scanf("%d", &minutes);
+            printf("%d minutes is equivalent to %.2f hours.\n", minutes, minutes / 60.0);
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
 }
 
+// Function to calculate area and perimeter of basic shapes
 void calculateAreaPerimeter() {
-    printf("Feature not implemented yet.\n");
+    int choice;
+    double side, length, width, radius;
+
+    printf("\nShape Calculation Options:\n");
+    printf("1. Square (Area and Perimeter)\n");
+    printf("2. Rectangle (Area and Perimeter)\n");
+    printf("3. Circle (Area and Circumference)\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter the side length of the square: ");
+            scanf("%lf", &side);
+            printf("Area: %.2f\n", side * side);
+            printf("Perimeter: %.2f\n", 4 * side);
+            break;
+        case 2:
+            printf("Enter the length of the rectangle: ");
+            scanf("%lf", &length);
+            printf("Enter the width of the rectangle: ");
+            scanf("%lf", &width);
+            printf("Area: %.2f\n", length * width);
+            printf("Perimeter: %.2f\n", 2 * (length + width));
+            break;
+        case 3:
+            printf("Enter the radius of the circle: ");
+            scanf("%lf", &radius);
+            printf("Area: %.2f\n", M_PI * radius * radius);
+            printf("Circumference: %.2f\n", 2 * M_PI * radius);
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
 }
 
 void clearScreen() {
