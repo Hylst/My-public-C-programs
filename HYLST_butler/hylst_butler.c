@@ -1,10 +1,37 @@
 // Hylst, your refined digital butler.
-// v 0.3
+// v 1.0
 // by Hylst
-// TO DO :
-// functions to implement
-// user input to secure
-// ...
+/*
+Hylst provides you with a variety of useful and fun tools divided into four categories:
+
+Personal Calculations
+Age Calculation: Calculate your current age based on your birthdate.
+Percentage Calculations: Perform various percentage calculations such as calculating percentages, discounts, and increases on values.
+Recipe Adjustments: Adjust ingredient quantities for different numbers of people for three recipes: Crêpes, Savory Cake, and Chocolate Chip Cookies.
+Basic Calculations: Simple arithmetic operations (addition, subtraction, multiplication, division).
+Unit Conversions: Convert between common units such as volume, weight, distance, and temperature.
+Days Between Dates: Calculate the number of days between two dates.
+
+Financial Management Tools
+Calculate VAT: Compute the VAT amount based on a price and a given VAT rate.
+Loan Repayment Calculator: Calculate your monthly loan repayments based on the loan amount, interest rate, and duration.
+Savings Planner: Plan how much you need to save monthly to reach a financial goal over a set period of time.
+Investment Returns Calculator: Calculate the future value of an investment based on principal, interest rate, and time.
+Currency Conversion: Convert an amount from one currency to another based on a given exchange rate.
+Manage Budget: Calculate your monthly balance by inputting income and expenses.
+
+Personal Services (Fun & Interactive)
+Compliment Me: Receive a kind and encouraging compliment from Hylst.
+Insult Me (for fun): Get a playful, humorous insult from Hylst.
+What's for Dinner Tonight?: Get a fun suggestion for dinner (with a humorous twist).
+Could You Shine My Old Shoes?: A humorous response from Hylst about shoe shining services.
+
+Practical Tools
+Generate Random Number: Generate a random number between two bounds defined by the user.
+Convert Time: Convert between hours, minutes, and seconds with various options.
+Calculate Area and Perimeter of Shapes: Calculate the area and perimeter for shapes such as squares, rectangles, circles, triangles, and more.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -15,25 +42,34 @@
 void showMainMenu();
 void personalCalculationsMenu();
 void financialManagementMenu();
+void personalServicesMenu();
 void practicalToolsMenu();
 int calculateAge();
+void percentageCalculations();
+void recipeCalculator();
 double calculateVAT();
 double calculateLoanRepayment();
+double savingsPlanner();
+double investmentReturnsCalculator();
+void currencyConversion();
 void basicCalculations();
 void unitConversionMenu();
-void volumeConversion();
-void weightConversion();
-void distanceConversion();
-void temperatureConversion();
-double netSalary();
-void generateRandomNumber();
 void convertTime();
+void generateRandomNumber();
 void calculateAreaPerimeter();
 void manageBudget();
 int calculateDaysBetweenDates();
 void complimentMe();
 void insultMe();
+void whatsForDinner();
+void polishShoes();
+void savoryCakeRecipe();
+void cookieRecipe();
 void clearScreen();
+void volumeConversion();
+void weightConversion();
+void distanceConversion();
+void temperatureConversion();
 
 // Utility to format and display floating-point numbers with precision, removing unnecessary zeros
 void printFloat(double value) {
@@ -44,6 +80,19 @@ void printFloat(double value) {
         *end-- = '\0';
     }
     printf("%s\n", buffer);
+}
+
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
+// Clear screen function
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");  // Windows clear screen
+#else
+    printf("\033[H\033[J");  // ANSI escape for Unix/Linux
+#endif
 }
 
 int main() {
@@ -66,16 +115,19 @@ int main() {
                 financialManagementMenu();
                 break;
             case 3:
-                practicalToolsMenu();
+                personalServicesMenu();
                 break;
             case 4:
+                practicalToolsMenu();
+                break;
+            case 5:
                 printf("It was a pleasure serving you. Farewell!\n");
                 exit(0);
                 break;
             default:
                 printf("Invalid choice, please select again.\n");
         }
-    } while (choice != 4);
+    } while (choice != 5);
 
     return 0;
 }
@@ -83,150 +135,11 @@ int main() {
 void showMainMenu() {
     printf("\n---- Main Menu ----\n");
     printf("1. Personal Calculations\n");
-    printf("2. Financial Management\n");
-    printf("3. Practical Tools\n");
-    printf("4. Exit\n");
+    printf("2. Financial Management Tools\n");
+    printf("3. Personal Services\n");
+    printf("4. Practical Tools\n");
+    printf("5. Exit\n");
 }
-
-void calculateAreaPerimeter() {
-    int choice;
-    double side, length, width, radius, base, height, a, b, c, d;
-
-    printf("\nShape Calculation Options:\n");
-    printf("1. Square (Area and Perimeter)\n");
-    printf("2. Rectangle (Area and Perimeter)\n");
-    printf("3. Circle (Area and Circumference)\n");
-    printf("4. Triangle (Area and Perimeter)\n");
-    printf("5. Trapezoid (Area and Perimeter)\n");
-    printf("6. Rhombus (Area and Perimeter)\n");
-    printf("7. Parallelogram (Area and Perimeter)\n");
-    printf("Enter your choice: ");
-    scanf("%d", &choice);
-
-    switch (choice) {
-        case 1:
-            printf("Enter the side length of the square: ");
-            scanf("%lf", &side);
-            printf("Area: %.2f\n", side * side);
-            printf("Perimeter: %.2f\n", 4 * side);
-            break;
-        case 2:
-            printf("Enter the length of the rectangle: ");
-            scanf("%lf", &length);
-            printf("Enter the width of the rectangle: ");
-            scanf("%lf", &width);
-            printf("Area: %.2f\n", length * width);
-            printf("Perimeter: %.2f\n", 2 * (length + width));
-            break;
-        case 3:
-            printf("Enter the radius of the circle: ");
-            scanf("%lf", &radius);
-            printf("Area: %.2f\n", M_PI * radius * radius);
-            printf("Circumference: %.2f\n", 2 * M_PI * radius);
-            break;
-        case 4:
-            printf("Enter the base of the triangle: ");
-            scanf("%lf", &base);
-            printf("Enter the height of the triangle: ");
-            scanf("%lf", &height);
-            printf("Enter the lengths of the three sides (a b c): ");
-            scanf("%lf %lf %lf", &a, &b, &c);
-            printf("Area: %.2f\n", 0.5 * base * height);
-            printf("Perimeter: %.2f\n", a + b + c);
-            break;
-        case 5:
-            printf("Enter the lengths of the parallel sides (a and b): ");
-            scanf("%lf %lf", &a, &b);
-            printf("Enter the height of the trapezoid: ");
-            scanf("%lf", &height);
-            printf("Enter the lengths of the other two sides (c and d): ");
-            scanf("%lf %lf", &c, &d);
-            printf("Area: %.2f\n", 0.5 * (a + b) * height);
-            printf("Perimeter: %.2f\n", a + b + c + d);
-            break;
-        case 6:
-            printf("Enter the length of a side of the rhombus: ");
-            scanf("%lf", &side);
-            printf("Enter the lengths of the diagonals: ");
-            scanf("%lf %lf", &a, &b);
-            printf("Area: %.2f\n", 0.5 * a * b);
-            printf("Perimeter: %.2f\n", 4 * side);
-            break;
-        case 7:
-            printf("Enter the base of the parallelogram: ");
-            scanf("%lf", &base);
-            printf("Enter the height of the parallelogram: ");
-            scanf("%lf", &height);
-            printf("Enter the length of the side: ");
-            scanf("%lf", &side);
-            printf("Area: %.2f\n", base * height);
-            printf("Perimeter: %.2f\n", 2 * (base + side));
-            break;
-        default:
-            printf("Invalid choice.\n");
-    }
-}
-
-void convertTime() {
-    int choice, hours, minutes, seconds;
-    printf("\nTime Conversion Options:\n");
-    printf("1. Hours to Minutes\n");
-    printf("2. Minutes to Hours\n");
-    printf("3. Hours to Seconds\n");
-    printf("4. Minutes to Seconds\n");
-    printf("5. Seconds to Hours\n");
-    printf("6. Seconds to Minutes\n");
-    printf("Enter your choice: ");
-    scanf("%d", &choice);
-
-    switch (choice) {
-        case 1:
-            printf("Enter time in hours: ");
-            scanf("%d", &hours);
-            printf("%d hours is equivalent to ");
-            printFloat(hours * 60.0);
-            printf(" minutes.\n");
-            break;
-        case 2:
-            printf("Enter time in minutes: ");
-            scanf("%d", &minutes);
-            printf("%d minutes is equivalent to ");
-            printFloat(minutes / 60.0);
-            printf(" hours.\n");
-            break;
-        case 3:
-            printf("Enter time in hours: ");
-            scanf("%d", &hours);
-            printf("%d hours is equivalent to ");
-            printFloat(hours * 3600.0);
-            printf(" seconds.\n");
-            break;
-        case 4:
-            printf("Enter time in minutes: ");
-            scanf("%d", &minutes);
-            printf("%d minutes is equivalent to ");
-            printFloat(minutes * 60.0);
-            printf(" seconds.\n");
-            break;
-        case 5:
-            printf("Enter time in seconds: ");
-            scanf("%d", &seconds);
-            printf("%d seconds is equivalent to ");
-            printFloat(seconds / 3600.0);
-            printf(" hours.\n");
-            break;
-        case 6:
-            printf("Enter time in seconds: ");
-            scanf("%d", &seconds);
-            printf("%d seconds is equivalent to ");
-            printFloat(seconds / 60.0);
-            printf(" minutes.\n");
-            break;
-        default:
-            printf("Invalid choice.\n");
-    }
-}
-
 
 // Personal Calculations Menu
 void personalCalculationsMenu() {
@@ -234,88 +147,121 @@ void personalCalculationsMenu() {
 
     do {
         printf("\n--- Personal Calculations ---\n");
-        printf("1. Calculate Age\n");
-        printf("2. Calculate VAT\n");
-        printf("3. Calculate Loan Repayment\n");
-        printf("4. Unit Conversion\n");
-        printf("5. Basic Calculations\n");
+        printf("1. Calculate Your Age\n");
+        printf("2. Percentage Calculations\n");
+        printf("3. Recipe Adjustments\n");
+        printf("4. Basic Calculations (Addition, Subtraction, etc.)\n");
+        printf("5. Unit Conversions\n");
         printf("6. Calculate Days Between Two Dates\n");
-        printf("7. Compliment Me\n");
-        printf("8. Insult Me\n");
-        printf("9. Qu'avons-nous pour le dîner ce soir ?\n");
-        printf("10. Pourriez-vous cirer mes vieilles chaussures ?\n");
-        printf("11. Back to Main Menu\n");
+        printf("7. Back to Main Menu\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
-                printf("Your age is: %d years\n", calculateAge());
+                printf("Based on your birthdate, your current age is: %d years\n", calculateAge());
                 break;
             case 2:
-                printf("VAT amount: ");
-                printFloat(calculateVAT());
+                percentageCalculations();
                 break;
             case 3:
-                printf("Monthly repayment: ");
-                printFloat(calculateLoanRepayment());
+                recipeCalculator();
                 break;
             case 4:
-                unitConversionMenu();
-                break;
-            case 5:
                 basicCalculations();
                 break;
+            case 5:
+                unitConversionMenu();
+                break;
             case 6:
-                printf("Days between the two dates: %d days\n", calculateDaysBetweenDates());
+                printf("The total number of days between the two dates is: %d days\n", calculateDaysBetweenDates());
                 break;
             case 7:
-                complimentMe();
-                break;
-            case 8:
-                insultMe();
-                break;
-            case 9:
-                whatsForDinner();
-                break;
-            case 10:
-                polishShoes();
-                break;
-            case 11:
                 return;
             default:
                 printf("Invalid choice, please select again.\n");
         }
-    } while (choice != 11);
+    } while (choice != 7);
 }
 
-
-// Financial Management Menu
+// Financial Management Tools Menu
 void financialManagementMenu() {
     int choice;
 
     do {
-        printf("\n--- Financial Management ---\n");
-        printf("1. Calculate Net Salary\n");
-        printf("2. Manage Budget (Income/Expenses)\n");
-        printf("3. Back to Main Menu\n");
+        printf("\n--- Financial Management Tools ---\n");
+        printf("1. Calculate VAT\n");
+        printf("2. Calculate Loan Repayment\n");
+        printf("3. Savings Planner\n");
+        printf("4. Investment Returns Calculator\n");
+        printf("5. Currency Conversion\n");
+        printf("6. Manage Budget (Income/Expenses)\n");
+        printf("7. Back to Main Menu\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
-                printf("Net salary: ");
-                printFloat(netSalary());
+                printf("Based on the entered price and VAT rate, the VAT amount is: ");
+                printFloat(calculateVAT());
                 break;
             case 2:
-                manageBudget();
+                printf("Your monthly loan repayment will be: ");
+                printFloat(calculateLoanRepayment());
                 break;
             case 3:
+                savingsPlanner();
+                break;
+            case 4:
+                investmentReturnsCalculator();
+                break;
+            case 5:
+                currencyConversion();
+                break;
+            case 6:
+                manageBudget();
+                break;
+            case 7:
                 return;
             default:
                 printf("Invalid choice, please select again.\n");
         }
-    } while (choice != 3);
+    } while (choice != 7);
+}
+
+// Personal Services Menu
+void personalServicesMenu() {
+    int choice;
+
+    do {
+        printf("\n--- Personal Services ---\n");
+        printf("1. Compliment Me\n");
+        printf("2. Insult Me (for fun)\n");
+        printf("3. What's for Dinner Tonight?\n");
+        printf("4. Could You Shine My Old Shoes?\n");
+        printf("5. Back to Main Menu\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                complimentMe();
+                break;
+            case 2:
+                insultMe();
+                break;
+            case 3:
+                whatsForDinner();
+                break;
+            case 4:
+                polishShoes();
+                break;
+            case 5:
+                return;
+            default:
+                printf("Invalid choice, please select again.\n");
+        }
+    } while (choice != 5);
 }
 
 // Practical Tools Menu
@@ -324,9 +270,9 @@ void practicalToolsMenu() {
 
     do {
         printf("\n--- Practical Tools ---\n");
-        printf("1. Generate Random Number\n");
-        printf("2. Convert Time\n");
-        printf("3. Calculate Area and Perimeter\n");
+        printf("1. Generate a Random Number\n");
+        printf("2. Convert Time (Hours, Minutes, Seconds)\n");
+        printf("3. Calculate Area and Perimeter of Shapes\n");
         printf("4. Back to Main Menu\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -349,7 +295,69 @@ void practicalToolsMenu() {
     } while (choice != 4);
 }
 
-// Function to calculate age based on birth date
+// Financial Tools Implementation
+
+double calculateVAT() {
+    double price, vat_rate;
+    printf("Please enter the price excluding VAT: ");
+    scanf("%lf", &price);
+    printf("Please enter the VAT rate (%%): ");
+    scanf("%lf", &vat_rate);
+    return price * (vat_rate / 100.0);
+}
+
+double calculateLoanRepayment() {
+    double loan_amount, interest_rate;
+    int months;
+    printf("Enter the loan amount: ");
+    scanf("%lf", &loan_amount);
+    printf("Enter the annual interest rate (%%): ");
+    scanf("%lf", &interest_rate);
+    printf("Enter the number of months for the loan duration: ");
+    scanf("%d", &months);
+
+    double monthly_rate = (interest_rate / 100) / 12;
+    double repayment = (loan_amount * monthly_rate) / (1 - pow(1 + monthly_rate, -months));
+    return repayment;
+}
+
+double savingsPlanner() {
+    double goal, months, monthly_savings;
+    printf("Please enter your total savings goal: ");
+    scanf("%lf", &goal);
+    printf("Over how many months do you plan to save? ");
+    scanf("%lf", &months);
+
+    monthly_savings = goal / months;
+    printf("You need to save %.2f per month to reach your savings goal.\n", monthly_savings);
+    return monthly_savings;
+}
+
+double investmentReturnsCalculator() {
+    double principal, interest_rate, years, returns;
+    printf("Enter the initial investment amount: ");
+    scanf("%lf", &principal);
+    printf("Enter the annual interest rate (%%): ");
+    scanf("%lf", &interest_rate);
+    printf("Enter the number of years the investment will be held: ");
+    scanf("%lf", &years);
+
+    returns = principal * pow(1 + (interest_rate / 100), years);
+    printf("Your investment will grow to: %.2f\n", returns);
+    return returns;
+}
+
+void currencyConversion() {
+    double amount, rate;
+    printf("Enter the amount in your local currency: ");
+    scanf("%lf", &amount);
+    printf("Enter the exchange rate (e.g., 1.2 for EUR to USD): ");
+    scanf("%lf", &rate);
+    printf("The equivalent amount is: %.2f\n", amount * rate);
+}
+
+// Personal Calculations Implementation
+
 int calculateAge() {
     int birthYear, birthMonth, birthDay;
     printf("Enter your birth year (YYYY): ");
@@ -359,7 +367,6 @@ int calculateAge() {
     printf("Enter your birth day (DD): ");
     scanf("%d", &birthDay);
 
-    // Get current date
     time_t now = time(NULL);
     struct tm *currentDate = localtime(&now);
 
@@ -367,10 +374,8 @@ int calculateAge() {
     int currentMonth = currentDate->tm_mon + 1;
     int currentDay = currentDate->tm_mday;
 
-    // Calculate age
     int age = currentYear - birthYear;
 
-    // Adjust if birthdate hasn't occurred yet this year
     if (birthMonth > currentMonth || (birthMonth == currentMonth && birthDay > currentDay)) {
         age--;
     }
@@ -378,63 +383,76 @@ int calculateAge() {
     return age;
 }
 
-// Function to calculate VAT
-double calculateVAT() {
-    double price, vat_rate;
-    printf("Enter the price (excl. VAT): ");
-    scanf("%lf", &price);
-    printf("Enter the VAT rate (%%): ");
-    scanf("%lf", &vat_rate);
-    return price * (vat_rate / 100.0);
+void percentageCalculations() {
+    double value, percentage, result;
+    int choice;
+
+    printf("\n--- Percentage Calculations ---\n");
+    printf("1. Calculate a percentage of a value\n");
+    printf("2. Calculate a discount/reduction\n");
+    printf("3. Calculate an increase on a value\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            // Calculate a percentage of a value
+            printf("Enter the value: ");
+            scanf("%lf", &value);
+            printf("Enter the percentage to calculate: ");
+            scanf("%lf", &percentage);
+            result = value * (percentage / 100.0);
+            printf("The result is: %.2f\n", result);
+            break;
+        case 2:
+            // Calculate a discount/reduction
+            printf("Enter the original price: ");
+            scanf("%lf", &value);
+            printf("Enter the discount percentage: ");
+            scanf("%lf", &percentage);
+            result = value * (1 - (percentage / 100.0));
+            printf("The price after the discount is: %.2f\n", result);
+            break;
+        case 3:
+            // Calculate an increase on a value
+            printf("Enter the original value: ");
+            scanf("%lf", &value);
+            printf("Enter the percentage increase: ");
+            scanf("%lf", &percentage);
+            result = value * (1 + (percentage / 100.0));
+            printf("The value after the increase is: %.2f\n", result);
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
 }
 
-// Function to calculate loan repayment
-double calculateLoanRepayment() {
-    double capital, interest_rate;
-    int months;
-    printf("Enter loan amount: ");
-    scanf("%lf", &capital);
-    printf("Enter interest rate (annual in %%): ");
-    scanf("%lf", &interest_rate);
-    printf("Enter duration in months: ");
-    scanf("%d", &months);
 
-    double monthly_rate = (interest_rate / 100) / 12;
-    double repayment = (capital * monthly_rate) / (1 - pow(1 + monthly_rate, -months));
-    return repayment;
-}
-
-// Basic calculations (+, -, *, /)
 void basicCalculations() {
     double num1, num2;
     char operator;
     printf("Enter first number: ");
     scanf("%lf", &num1);
     printf("Enter operator (+, -, *, /): ");
-    scanf(" %c", &operator);  // space before %c to consume newline
+    scanf(" %c", &operator);
     printf("Enter second number: ");
     scanf("%lf", &num2);
 
     switch (operator) {
         case '+':
-            printf("Result: ");
-            printFloat(num1 + num2);
+            printf("Result: %.2f\n", num1 + num2);
             break;
         case '-':
-            printf("Result: ");
-            printFloat(num1 - num2);
+            printf("Result: %.2f\n", num1 - num2);
             break;
         case '*':
-            printf("Result: ");
-            printFloat(num1 * num2);
+            printf("Result: %.2f\n", num1 * num2);
             break;
         case '/':
-            if (num2 != 0) {
-                printf("Result: ");
-                printFloat(num1 / num2);
-            } else {
+            if (num2 != 0)
+                printf("Result: %.2f\n", num1 / num2);
+            else
                 printf("Cannot divide by zero.\n");
-            }
             break;
         default:
             printf("Invalid operator.\n");
@@ -588,76 +606,7 @@ void temperatureConversion() {
     }
 }
 
-// Function to calculate net salary based on gross salary and social security rate
-double netSalary() {
-    double gross, social_security;
-    printf("Enter gross salary: ");
-    scanf("%lf", &gross);
-    printf("Enter social security rate (%%): ");
-    scanf("%lf", &social_security);
-    return gross * (1 - social_security / 100);
-}
 
-// Function to manage monthly budget (enter expenses and income one by one)
-void manageBudget() {
-    double income = 0, expenses = 0, value;
-    char choice;
-
-    // Enter expenses
-    printf("Enter your expenses one by one (press 'x' to stop):\n");
-    while (1) {
-        printf("Enter expense: ");
-        if (scanf("%lf", &value) == 1) {
-            expenses += value;
-        } else {
-            scanf("%s", &choice);
-            if (choice == 'x' || choice == 'X') {
-                break;
-            } else {
-                printf("Invalid input. Please try again.\n");
-            }
-        }
-    }
-
-    // Enter income
-    printf("Enter your income one by one (press 'x' to stop):\n");
-    while (1) {
-        printf("Enter income: ");
-        if (scanf("%lf", &value) == 1) {
-            income += value;
-        } else {
-            scanf("%s", &choice);
-            if (choice == 'x' || choice == 'X') {
-                break;
-            } else {
-                printf("Invalid input. Please try again.\n");
-            }
-        }
-    }
-
-    printf("Your balance for the month is: ");
-    printFloat(income - expenses);
-}
-
-// Function to generate a random number between two bounds set by the user
-void generateRandomNumber() {
-    int lower_bound, upper_bound, random_num;
-    printf("Enter the lower bound: ");
-    scanf("%d", &lower_bound);
-    printf("Enter the upper bound: ");
-    scanf("%d", &upper_bound);
-
-    if (lower_bound > upper_bound) {
-        printf("Invalid bounds. Lower bound should be less than or equal to upper bound.\n");
-        return;
-    }
-
-    srand(time(0));
-    random_num = (rand() % (upper_bound - lower_bound + 1)) + lower_bound;
-    printf("Random number between %d and %d: %d\n", lower_bound, upper_bound, random_num);
-}
-
-// Function to calculate the number of days between two dates
 int calculateDaysBetweenDates() {
     int day1, month1, year1, day2, month2, year2;
     printf("Enter the first date (DD MM YYYY): ");
@@ -682,15 +631,135 @@ int calculateDaysBetweenDates() {
     return abs(days);
 }
 
-// Function to compliment the user
-void complimentMe() {
-    printf("You are amazing, intelligent, and a joy to assist!\n");
+void manageBudget() {
+    double income = 0, expenses = 0, value;
+    char choice;
+
+    printf("Enter your expenses one by one (press 'x' to stop):\n");
+    while (1) {
+        printf("Enter expense: ");
+        if (scanf("%lf", &value) == 1) {
+            expenses += value;
+        } else {
+            scanf("%s", &choice);
+            if (choice == 'x' || choice == 'X') {
+                break;
+            } else {
+                printf("Invalid input. Please try again.\n");
+            }
+        }
+    }
+
+    printf("Enter your income one by one (press 'x' to stop):\n");
+    while (1) {
+        printf("Enter income: ");
+        if (scanf("%lf", &value) == 1) {
+            income += value;
+        } else {
+            scanf("%s", &choice);
+            if (choice == 'x' || choice == 'X') {
+                break;
+            } else {
+                printf("Invalid input. Please try again.\n");
+            }
+        }
+    }
+
+    printf("Your balance for the month is: ");
+    printFloat(income - expenses);
 }
 
-// Function to humorously insult the user
-void insultMe() {
-    printf("Really? You couldn't even get that right? I'm not mad, just disappointed.\n");
+// Recipe Adjustments
+void recipeCalculator() {
+    int original_people, new_people;
+    double flour, eggs, milk;
+    int recipe_choice;
+
+    printf("\n--- Recipe Adjustments ---\n");
+    printf("1. Crêpes Recipe\n");
+    printf("2. Savory Cake Recipe\n");
+    printf("3. Chocolate Chip Cookie Recipe\n");
+    printf("Choose a recipe to adjust: ");
+    scanf("%d", &recipe_choice);
+
+    printf("Enter the original number of people for the recipe: ");
+    scanf("%d", &original_people);
+    printf("Enter the new number of people: ");
+    scanf("%d", &new_people);
+
+    double scale_factor = (double)new_people / original_people;
+
+    switch (recipe_choice) {
+        case 1:
+            flour = 250 * scale_factor;
+            eggs = 3 * scale_factor;
+            milk = 500 * scale_factor;
+
+            printf("For %d people, you need for Crêpes:\n", new_people);
+            printf("%.2f grams of flour\n", flour);
+            printf("%.2f eggs\n", eggs);
+            printf("%.2f milliliters of milk\n", milk);
+            break;
+        case 2:
+            savoryCakeRecipe();
+            break;
+        case 3:
+            cookieRecipe();
+            break;
+        default:
+            printf("Invalid recipe choice.\n");
+    }
 }
+
+void savoryCakeRecipe() {
+    int original_people, new_people;
+    double flour, eggs, milk, cheese, ham;
+
+    printf("For how many people is the original recipe? ");
+    scanf("%d", &original_people);
+    printf("How many people would you like to make the recipe for? ");
+    scanf("%d", &new_people);
+
+    double scale_factor = (double)new_people / original_people;
+
+    flour = 150 * scale_factor;
+    eggs = 3 * scale_factor;
+    milk = 100 * scale_factor;
+    cheese = 100 * scale_factor;
+    ham = 200 * scale_factor;
+
+    printf("For %d people, you need for Savory Cake:\n", new_people);
+    printf("%.2f grams of flour\n", flour);
+    printf("%.2f eggs\n", eggs);
+    printf("%.2f milliliters of milk\n", milk);
+    printf("%.2f grams of grated cheese\n", cheese);
+    printf("%.2f grams of ham\n", ham);
+}
+
+void cookieRecipe() {
+    int original_people, new_people;
+    double flour, sugar, butter, chocolate_chips;
+
+    printf("For how many people is the original recipe? ");
+    scanf("%d", &original_people);
+    printf("How many people would you like to make the recipe for? ");
+    scanf("%d", &new_people);
+
+    double scale_factor = (double)new_people / original_people;
+
+    flour = 300 * scale_factor;
+    sugar = 150 * scale_factor;
+    butter = 200 * scale_factor;
+    chocolate_chips = 100 * scale_factor;
+
+    printf("For %d people, you need for Chocolate Chip Cookies:\n", new_people);
+    printf("%.2f grams of flour\n", flour);
+    printf("%.2f grams of sugar\n", sugar);
+    printf("%.2f grams of butter\n", butter);
+    printf("%.2f grams of chocolate chips\n", chocolate_chips);
+}
+
+// Fun Services
 
 void whatsForDinner() {
     const char *dishes[] = {
@@ -706,6 +775,149 @@ void polishShoes() {
     printf("Ah, your shoes deserve only the finest polish! Unfortunately, my polishing arms are out of commission. But I assure you, they're shining... in spirit!\n");
 }
 
-void clearScreen() {
-    printf("\033[H\033[J"); // Clear screen (ANSI escape code)
+void complimentMe() {
+    printf("You are amazing, intelligent, and a joy to assist!\n");
+}
+
+void insultMe() {
+    printf("Really? You couldn't even get that right? I'm not mad, just disappointed.\n");
+}
+
+void generateRandomNumber() {
+    int lower, upper, random_num;
+    printf("Enter lower bound: ");
+    scanf("%d", &lower);
+    printf("Enter upper bound: ");
+    scanf("%d", &upper);
+
+    srand(time(0));
+    random_num = (rand() % (upper - lower + 1)) + lower;
+    printf("Generated random number: %d\n", random_num);
+}
+
+void convertTime() {
+    int choice, hours, minutes, seconds;
+    printf("\nTime Conversion Options:\n");
+    printf("1. Hours to Minutes\n");
+    printf("2. Minutes to Hours\n");
+    printf("3. Hours to Seconds\n");
+    printf("4. Minutes to Seconds\n");
+    printf("5. Seconds to Hours\n");
+    printf("6. Seconds to Minutes\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter time in hours: ");
+            scanf("%d", &hours);
+            printf("%d hours is equivalent to %d minutes.\n", hours, hours * 60);
+            break;
+        case 2:
+            printf("Enter time in minutes: ");
+            scanf("%d", &minutes);
+            printf("%d minutes is equivalent to %.2f hours.\n", minutes, minutes / 60.0);
+            break;
+        case 3:
+            printf("Enter time in hours: ");
+            scanf("%d", &hours);
+            printf("%d hours is equivalent to %d seconds.\n", hours, hours * 3600);
+            break;
+        case 4:
+            printf("Enter time in minutes: ");
+            scanf("%d", &minutes);
+            printf("%d minutes is equivalent to %d seconds.\n", minutes, minutes * 60);
+            break;
+        case 5:
+            printf("Enter time in seconds: ");
+            scanf("%d", &seconds);
+            printf("%d seconds is equivalent to %.2f hours.\n", seconds, seconds / 3600.0);
+            break;
+        case 6:
+            printf("Enter time in seconds: ");
+            scanf("%d", &seconds);
+            printf("%d seconds is equivalent to %.2f minutes.\n", seconds, seconds / 60.0);
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
+}
+
+void calculateAreaPerimeter() {
+    int choice;
+    double side, length, width, radius, base, height, a, b, c, d;
+
+    printf("\nShape Calculation Options:\n");
+    printf("1. Square (Area and Perimeter)\n");
+    printf("2. Rectangle (Area and Perimeter)\n");
+    printf("3. Circle (Area and Circumference)\n");
+    printf("4. Triangle (Area and Perimeter)\n");
+    printf("5. Trapezoid (Area and Perimeter)\n");
+    printf("6. Rhombus (Area and Perimeter)\n");
+    printf("7. Parallelogram (Area and Perimeter)\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter the side length of the square: ");
+            scanf("%lf", &side);
+            printf("Area: %.2f\n", side * side);
+            printf("Perimeter: %.2f\n", 4 * side);
+            break;
+        case 2:
+            printf("Enter the length of the rectangle: ");
+            scanf("%lf", &length);
+            printf("Enter the width of the rectangle: ");
+            scanf("%lf", &width);
+            printf("Area: %.2f\n", length * width);
+            printf("Perimeter: %.2f\n", 2 * (length + width));
+            break;
+        case 3:
+            printf("Enter the radius of the circle: ");
+            scanf("%lf", &radius);
+            printf("Area: %.2f\n", M_PI * radius * radius);
+            printf("Circumference: %.2f\n", 2 * M_PI * radius);
+            break;
+        case 4:
+            printf("Enter the base of the triangle: ");
+            scanf("%lf", &base);
+            printf("Enter the height of the triangle: ");
+            scanf("%lf", &height);
+            printf("Enter the lengths of the three sides (a b c): ");
+            scanf("%lf %lf %lf", &a, &b, &c);
+            printf("Area: %.2f\n", 0.5 * base * height);
+            printf("Perimeter: %.2f\n", a + b + c);
+            break;
+        case 5:
+            printf("Enter the lengths of the parallel sides (a and b): ");
+            scanf("%lf %lf", &a, &b);
+            printf("Enter the height of the trapezoid: ");
+            scanf("%lf", &height);
+            printf("Enter the lengths of the other two sides (c and d): ");
+            scanf("%lf %lf", &c, &d);
+            printf("Area: %.2f\n", 0.5 * (a + b) * height);
+            printf("Perimeter: %.2f\n", a + b + c + d);
+            break;
+        case 6:
+            printf("Enter the length of a side of the rhombus: ");
+            scanf("%lf", &side);
+            printf("Enter the lengths of the diagonals: ");
+            scanf("%lf %lf", &a, &b);
+            printf("Area: %.2f\n", 0.5 * a * b);
+            printf("Perimeter: %.2f\n", 4 * side);
+            break;
+        case 7:
+            printf("Enter the base of the parallelogram: ");
+            scanf("%lf", &base);
+            printf("Enter the height of the parallelogram: ");
+            scanf("%lf", &height);
+            printf("Enter the length of the side: ");
+            scanf("%lf", &side);
+            printf("Area: %.2f\n", base * height);
+            printf("Perimeter: %.2f\n", 2 * (base + side));
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
 }
