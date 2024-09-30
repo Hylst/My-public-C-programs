@@ -3,8 +3,12 @@ Image filtering Program
 
 How It Works:
 Select, load and display an picture / bitmap File.
-Choose an apply graphical effect according to given parameters.
+Choose an apply graphical effect according to given parameters :
+apply_filter: Applies the convolution matrix to each pixel using filters like blur or sharpen.
+Convolution: The matrix moves over every pixel, computing a weighted sum of neighbors.
 Display changes and save it modified.
+
+Image Handling: Uses SDL2 for image loading (IMG_Load) and surface manipulation.
 
 Gaussian Blur: Approximates a smooth blur using a 3x3 Gaussian kernel.
 Edge Detection: Highlights edges using a high-pass filter.
