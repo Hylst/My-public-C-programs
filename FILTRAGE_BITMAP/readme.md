@@ -1,3 +1,23 @@
+Image filtering Program
+
+
+How It Works:
+Select, load and display an picture / bitmap File.
+Choose an apply graphical effect according to given parameters.
+Display changes and save it modified.
+
+Gaussian Blur: Approximates a smooth blur using a 3x3 Gaussian kernel.
+Edge Detection: Highlights edges using a high-pass filter.
+Motion Blur: Simulates motion with a directional blur.
+Emboss: Adds a 3D shadow effect with a bias.
+Mean Filter: Averages the pixels in a 3x3 grid to blur the image. This program now supports the following filters using SDL2:
+Gaussian Blur: Smoothens the image by applying a weighted blur.
+Edge Detection: Highlights the edges of objects in the image.
+Motion Blur: Creates a directional blur effect, simulating movement.
+Emboss: Adds a 3D effect to the image.
+Mean Filter: Blurs the image by averaging the pixel values.
+Median Filter: Removes noise by selecting the median pixel value in a neighborhood.
+
 This updated version of the program adds Sharpen filtering and fully implements the filtering logic for each filter type. The program uses SDL2 to load, manipulate, and display the images, and applies the following filters:
 
 Gaussian Blur
