@@ -1,11 +1,15 @@
 // Moto Game: Because who needs a social life when you can ride a virtual motorcycle?
+// Not functionnal : no moto moves, all vehicules static, big ascii static area on top.
+// Hylst 
 
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
+#define SLEEP(ms) Sleep(ms)
 #else
 #include <unistd.h>
+#define SLEEP(ms) usleep(ms * 1000)
 #endif
 #include <time.h>
 
@@ -13,12 +17,6 @@
 #define WIDTH 80
 #define HEIGHT 30
 #define SPEED 100000
-
-typedef struct {
-    int x;
-    int y;
-    int type;
-} Entity;
 
 // Structure to hold the moto's position and fuel level
 typedef struct {
@@ -28,13 +26,18 @@ typedef struct {
     int score;
 } Moto;
 
-#ifdef _WIN32
-void usleep(int microseconds) {
-    Sleep(microseconds / 1000);
-}
-#else
-// usleep() est déjà définie dans <unistd.h>
-#endif
+typedef enum {
+    CAR,
+    TRUCK,
+    FUEL,
+    OBSTACLE
+} EntityType;
+
+typedef struct {
+    int x;
+    int y;
+    EntityType type;
+} Entity;
 
 // Function to clear the screen, because we don't want any clutter
 void clear_screen() {
@@ -122,27 +125,29 @@ void init_road(char road[HEIGHT][WIDTH]) {
     }
 }
 
-// Function to update the road with the moto and obstacles, because we need to see where we're going
 void update_road(char road[HEIGHT][WIDTH], Moto *moto, Entity entities[], int entity_count) {
     init_road(road);
     
+    // Imprimez les entités sur la route
     for (int i = 0; i < entity_count; i++) {
         switch (entities[i].type) {
             case CAR:
-                print_car(entities[i].x, entities[i].y);
+                road[entities[i].y][entities[i].x] = 'C';
                 break;
             case TRUCK:
-                print_truck(entities[i].x, entities[i].y);
+                road[entities[i].y][entities[i].x] = 'T';
                 break;
             case FUEL:
-                print_fuel(entities[i].x, entities[i].y);
+                road[entities[i].y][entities[i].x] = 'F';
                 break;
             case OBSTACLE:
-                print_obstacle(entities[i].x, entities[i].y);
+                road[entities[i].y][entities[i].x] = 'O';
                 break;
         }
     }
     
+    // Imprimez la moto sur la route
+    road[moto->y][moto->x] = 'M';
     print_moto(moto->x, moto->y);
 }
 
@@ -267,7 +272,7 @@ int main() {
 
         moto.score++;
 
-        usleep(SPEED);
+        SLEEP(SPEED);
 
         // Get the player's input
         char input;
