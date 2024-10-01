@@ -1,25 +1,20 @@
 //Text Platformer
-// v0.4f 
+// v0.6 
 // by Hylst (1996 - 2024 (cleaning code / good practice / comments) )
 // To Do :
-// Change to a cross-platform lib like ncurses to access terminal functionality. 
+// Display management not finished
+// A lot more 
 
 #include <stdio.h>
 #include <stdlib.h>
-
-// Change folowing libs for a cross-platform lib : ncurses to access terminal functionality. 
-#include <unistd.h>
-#include <termios.h>
-
-#include <fcntl.h>
+#include <windows.h> // Pour Sleep et Beep sur Windows
 
 #define WIDTH 50
 #define HEIGHT 15
 #define PLAYER 'P'
-#define ENEMY 'E'
+#define ENEMY '@'
 #define BULLET '-'
-#define OBSTACLE '#'
-#define PLATFORM '='
+#define PLATFORM '■'
 #define EMPTY ' '
 
 typedef struct {
@@ -49,6 +44,27 @@ int gameOver = 0;
 int score = 0;
 int level = 1;
 
+// Fonction pour jouer un son (disponible uniquement sous Windows)
+void playSound(int frequency, int duration) {
+    Beep(frequency, duration);
+}
+
+void intro() {
+    system("cls"); // Clear screen for Windows
+
+    printf("********************************************\n");
+    printf("*        WELCOME TO THE PLATFORMER GAME     *\n");
+    printf("********************************************\n");
+    printf("Controls:\n");
+    printf("  - Move Left  : 'q'\n");
+    printf("  - Move Right : 'd'\n");
+    printf("  - Jump       : 'z'\n");
+    printf("  - Shoot      : 's'\n\n");
+
+    printf("Press any key to start...\n");
+    getch(); // Wait for user to press a key
+}
+
 void initGame() {
     game.player.x = 1;
     game.player.y = HEIGHT - 2;
@@ -58,17 +74,17 @@ void initGame() {
     game.health = 3;
     game.bullet.isActive = 0;
 
-    // Place enemies
+    // Placer les ennemis
     for (int i = 0; i < enemyCount; i++) {
         enemies[i].x = 10 + i * 10;
         enemies[i].y = HEIGHT - 2;
     }
 
-    // Place obstacles and platforms
+    // Placer les plateformes
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             if (y == HEIGHT - 1 || (x % 12 == 0 && y == HEIGHT - 4)) {
-                board[y][x] = PLATFORM; // Platforms
+                board[y][x] = PLATFORM;
             } else {
                 board[y][x] = EMPTY;
             }
@@ -77,91 +93,59 @@ void initGame() {
 }
 
 void drawBoard() {
-    system("clear");
+    system("cls"); // Utiliser "cls" pour Windows
 
-    // Clear the board
+    // Bordure supérieure
+    printf("╔");
+    for (int x = 0; x < WIDTH; x++) printf("═");
+    printf("╗\n");
+
+    // Afficher le plateau
     for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            if (y == HEIGHT - 1 || (x % 12 == 0 && y == HEIGHT - 4)) {
-                board[y][x] = PLATFORM; // Platforms
-            } else {
-                board[y][x] = EMPTY;
-            }
-        }
-    }
-
-    // Place player
-    board[game.player.y][game.player.x] = PLAYER;
-
-    // Place enemies
-    for (int i = 0; i < enemyCount; i++) {
-        if (enemies[i].x >= 0 && enemies[i].x < WIDTH) {
-            board[enemies[i].y][enemies[i].x] = ENEMY;
-        }
-    }
-
-    // Place bullet
-    if (game.bullet.isActive) {
-        board[game.bullet.pos.y][game.bullet.pos.x] = BULLET;
-    }
-
-    // Draw board
-    for (int y = 0; y < HEIGHT; y++) {
+        printf("║"); // Bordure gauche
         for (int x = 0; x < WIDTH; x++) {
             printf("%c", board[y][x]);
         }
-        printf("\n");
+        printf("║\n"); // Bordure droite
     }
+
+    // Bordure inférieure
+    printf("╚");
+    for (int x = 0; x < WIDTH; x++) printf("═");
+    printf("╝\n");
+
     printf("Score: %d | Health: %d | Level: %d\n", score, game.health, level);
 }
 
 int kbhit() {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
-
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-    ch = getchar();
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-    if (ch != EOF) {
-        ungetc(ch, stdin);
-        return 1;
-    }
-
-    return 0;
+    return _kbhit(); // Remplacer pour Windows
 }
 
 void processInput() {
     if (kbhit()) {
-        char key = getchar();
+        char key = getch(); // Utiliser getch() pour Windows
         switch (key) {
             case 'q':
-                if (game.player.x > 0) game.player.x--; // Move left
+                if (game.player.x > 0) game.player.x--; // Déplacement gauche
                 break;
             case 'd':
-                if (game.player.x < WIDTH - 1) game.player.x++; // Move right
+                if (game.player.x < WIDTH - 1) game.player.x++; // Déplacement droit
                 break;
             case 'z':
                 if (!game.jumping && game.player.y == game.groundLevel) {
                     game.jumping = 1;
-                    game.velocityY = 3; // Initial jump velocity
+                    game.velocityY = 3; // Vitesse de saut
+                    playSound(750, 100); // Son pour le saut
                 }
                 break;
             case 's':
-                // Shoot bullet if not active
+                // Tirer une balle si inactif
                 if (!game.bullet.isActive) {
                     game.bullet.pos.x = game.player.x + 1;
                     game.bullet.pos.y = game.player.y;
                     game.bullet.isActive = 1;
-                    game.bullet.range = 5; // Bullet range
+                    game.bullet.range = 5; // Portée des balles
+                    playSound(1000, 50); // Son pour le tir
                 }
                 break;
         }
@@ -171,14 +155,14 @@ void processInput() {
 void updatePlayerJump() {
     if (game.jumping) {
         if (game.velocityY > 0) {
-            game.player.y--; // Jump up
-            game.velocityY--; // Decrease upward velocity
+            game.player.y--; // Monter
+            game.velocityY--; // Réduire la vitesse verticale
         } else {
-            game.jumping = 0; // Reached max height, start falling
+            game.jumping = 0; // Atteint la hauteur max, commencer à descendre
         }
     } else {
         if (game.player.y < game.groundLevel && board[game.player.y + 1][game.player.x] == EMPTY) {
-            game.player.y++; // Fall down with gravity
+            game.player.y++; // Descente par gravité
         }
     }
 }
@@ -186,17 +170,17 @@ void updatePlayerJump() {
 void updateBullet() {
     if (game.bullet.isActive) {
         game.bullet.pos.x++;
-        game.bullet.range--; // Decrease bullet range
+        game.bullet.range--; // Réduire la portée de la balle
         if (game.bullet.pos.x >= WIDTH || game.bullet.range <= 0) {
-            game.bullet.isActive = 0; // Bullet went off screen or out of range
+            game.bullet.isActive = 0; // La balle sort de l'écran ou perd sa portée
         } else {
-            // Check collision with enemies
+            // Vérifier la collision avec les ennemis
             for (int i = 0; i < enemyCount; i++) {
                 if (game.bullet.pos.x == enemies[i].x && game.bullet.pos.y == enemies[i].y) {
-                    // Enemy hit
-                    enemies[i].x = -1; // Remove enemy
-                    score += 100; // Increase score
-                    game.bullet.isActive = 0; // Bullet disappears
+                    enemies[i].x = -1; // Supprimer l'ennemi
+                    score += 100; // Augmenter le score
+                    game.bullet.isActive = 0; // La balle disparaît
+                    playSound(400, 100); // Son pour la destruction d'un ennemi
                 }
             }
         }
@@ -206,12 +190,13 @@ void updateBullet() {
 void updateEnemies() {
     for (int i = 0; i < enemyCount; i++) {
         if (enemies[i].x > 0) {
-            enemies[i].x--; // Move enemies towards player
+            enemies[i].x--; // Les ennemis avancent vers le joueur
         }
         if (enemies[i].x == game.player.x && enemies[i].y == game.player.y) {
-            game.health--; // Player hit by enemy
+            game.health--; // Le joueur est touché par un ennemi
+            playSound(200, 200); // Son pour un coup reçu
             if (game.health <= 0) {
-                gameOver = 1; // Game over if health reaches 0
+                gameOver = 1; // Game over si la santé atteint 0
             }
         }
     }
@@ -219,9 +204,9 @@ void updateEnemies() {
 
 void nextLevel() {
     level++;
-    enemyCount += 2; // Add more enemies
+    enemyCount += 2; // Ajouter plus d'ennemis à chaque niveau
     for (int i = 0; i < enemyCount; i++) {
-        enemies[i].x = 10 + i * 5; // Reinitialize enemies at the next level
+        enemies[i].x = 10 + i * 5; // Réinitialiser les ennemis pour le niveau suivant
         enemies[i].y = HEIGHT - 2;
     }
 }
@@ -233,22 +218,25 @@ void gameLoop() {
         updatePlayerJump();
         updateBullet();
         updateEnemies();
-        usleep(100000); // Delay for game speed
+        Sleep(100); // Utiliser Sleep pour Windows
 
-        // If all enemies are gone, go to the next level
+        // Passer au niveau suivant si tous les ennemis sont éliminés
         int remainingEnemies = 0;
         for (int i = 0; i < enemyCount; i++) {
             if (enemies[i].x >= 0) remainingEnemies++;
         }
         if (remainingEnemies == 0) {
             nextLevel();
+            playSound(1200, 200); // Son pour le passage de niveau
         }
     }
 
     printf("Game Over! Final Score: %d\n", score);
+    playSound(100, 600); // Son de fin de partie
 }
 
 int main() {
+    intro(); // Affichage de l'intro avec instructions
     initGame();
     gameLoop();
     return 0;
