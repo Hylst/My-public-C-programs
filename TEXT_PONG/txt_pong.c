@@ -1,33 +1,28 @@
 // Text Pong
-// v0.4
+// v1
 // by Hylst (1994 - 2024 (cleaning code / good practice / comments) )
 // To Do :
-// Enhance extended ascii characters display
-// Several lives before game over
-// Ask before quit if new game
-// Explain keyboard controls in introduction
-// Make the game board bigger
-
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
     #include <conio.h>
-    #include <windows.h>
+    #include <windows.h> // For Sleep, Beep, and setting UTF-8 encoding
 #else
-    #include <unistd.h>
-    #include <termios.h>
+    #include <unistd.h>  // For usleep
+    #include <termios.h> // For non-blocking input in Unix
     #include <fcntl.h>
+    #include <locale.h>  // To fix extended ASCII characters on Unix
 #endif
 
-#define WIDTH 40
-#define HEIGHT 20
+#define WIDTH 80
+#define HEIGHT 24
 #define PADDLE_CHAR '|'
 #define BALL_CHAR 'O'
 #define EMPTY ' '
 #define OBSTACLE 'X'
 
-// Position structure
 typedef struct {
     int x, y;
 } Position;
@@ -35,18 +30,21 @@ typedef struct {
 Position ball = {WIDTH / 2, HEIGHT / 2};
 Position paddle1 = {1, HEIGHT / 2};
 Position paddle2 = {WIDTH - 2, HEIGHT / 2};
-Position obstacles[5]; // Obstacles
+Position obstacles[5]; // Obstacles on the field
 int ballDirectionX = 1;
 int ballDirectionY = 1;
 int score1 = 0, score2 = 0;
 int mode = 0;  // 0 = Solo, 1 = Two players
+int isPaused = 0;
 
 // Cross-platform clear screen
 void clearScreen() {
     #ifdef _WIN32
-        system("cls");
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        COORD Position = {0, 0};
+        SetConsoleCursorPosition(hOut, Position);
     #else
-        system("clear");
+        printf("\033[H\033[J"); // ANSI escape code for clearing screen
     #endif
 }
 
@@ -96,43 +94,44 @@ int _kbhit() {
 }
 #endif
 
-// Draw the game field with ASCII borders and paddles
-void drawBoard() {
-    clearScreen();
-    printf("╔");
-    for (int i = 0; i < WIDTH; i++) printf("═");
-    printf("╗\n");
+// Double-buffered drawing
+void drawBoard(char *buffer) {
+    sprintf(buffer, "╔");
+    for (int i = 0; i < WIDTH; i++) strcat(buffer, "═");
+    strcat(buffer, "╗\n");
 
     for (int y = 0; y < HEIGHT; y++) {
-        printf("║");
+        strcat(buffer, "║");
         for (int x = 0; x < WIDTH; x++) {
             if (x == ball.x && y == ball.y) {
-                printf("%c", BALL_CHAR); // Ball
+                strcat(buffer, "O"); // Ball
             } else if (x == paddle1.x && y >= paddle1.y - 1 && y <= paddle1.y + 1) {
-                printf("%c", PADDLE_CHAR); // Player 1 paddle
+                strcat(buffer, "|"); // Player 1 paddle
             } else if (x == paddle2.x && y >= paddle2.y - 1 && y <= paddle2.y + 1) {
-                printf("%c", PADDLE_CHAR); // Player 2/AI paddle
+                strcat(buffer, "|"); // Player 2/AI paddle
             } else {
                 int isObstacle = 0;
                 for (int i = 0; i < 5; i++) {
                     if (x == obstacles[i].x && y == obstacles[i].y) {
-                        printf("%c", OBSTACLE); // Obstacles
+                        strcat(buffer, "X"); // Obstacles
                         isObstacle = 1;
                         break;
                     }
                 }
                 if (!isObstacle) {
-                    printf("%c", EMPTY); // Empty space
+                    strcat(buffer, " "); // Empty space
                 }
             }
         }
-        printf("║\n");
+        strcat(buffer, "║\n");
     }
 
-    printf("╚");
-    for (int i = 0; i < WIDTH; i++) printf("═");
-    printf("╝\n");
-    printf("Score: Player 1: %d | Player 2: %d\n", score1, score2);
+    strcat(buffer, "╚");
+    for (int i = 0; i < WIDTH; i++) strcat(buffer, "═");
+    strcat(buffer, "╝\n");
+    char scoreBuffer[50];
+    sprintf(scoreBuffer, "Score: Player 1: %d | Player 2: %d\n", score1, score2);
+    strcat(buffer, scoreBuffer);
 }
 
 // Update ball position and handle collisions
@@ -181,14 +180,27 @@ void updateBall() {
 // Player and AI input
 void processInput() {
     if (_kbhit()) {
-        char key = getchar();
-        // Player 1 controls (q = up, a = down)
-        if (key == 'q' && paddle1.y > 1) paddle1.y--;
-        if (key == 'a' && paddle1.y < HEIGHT - 2) paddle1.y++;
-        // Player 2/AI controls (p = up, l = down) for two players
-        if (mode == 1) {
-            if (key == 'p' && paddle2.y > 1) paddle2.y--;
-            if (key == 'l' && paddle2.y < HEIGHT - 2) paddle2.y++;
+        char key;
+        #ifdef _WIN32
+            key = _getch();  // Use _getch() under Windows
+        #else
+            key = getchar();  // Use getchar() under Unix
+        #endif
+        if (key == 'q') {
+            printf("\nYou decided to quit. No hard feelings, right? Game over.\n");
+            exit(0);  // Quit the game
+        } else if (key == 'p') {
+            isPaused = !isPaused;  // Toggle pause
+        }
+        if (!isPaused) {
+            // Player 1 controls (w = up, s = down)
+            if (key == 'z' && paddle1.y > 1) paddle1.y--;
+            if (key == 's' && paddle1.y < HEIGHT - 2) paddle1.y++;
+            // Player 2/AI controls (o = up, l = down) for two players
+            if (mode == 1) {
+                if (key == 'o' && paddle2.y > 1) paddle2.y--;
+                if (key == 'l' && paddle2.y < HEIGHT - 2) paddle2.y++;
+            }
         }
     }
 }
@@ -204,15 +216,26 @@ void moveAI() {
 
 // Menu for game mode selection
 void showMenu() {
+    clearScreen();
+    printf("╔════════════════════════════════════╗\n");
+    printf("║          WELCOME TO PONG!          ║\n");
+    printf("╠════════════════════════════════════╣\n");
+    printf("║ 1. Solo Mode                       ║\n");
+    printf("║ 2. Two-Player Mode                 ║\n");
+    printf("║ 3. Quit (I'll miss you)            ║\n");
+    printf("╠════════════════════════════════════╣\n");
+    printf("║ Controls:                          ║\n");
+    printf("║  Player 1: z (up), s (down)        ║\n");
+    printf("║  Player 2: s (up), l (down)        ║\n");
+    printf("║  p: Pause, q: Quit anytime         ║\n");
+    printf("╚════════════════════════════════════╝\n");
+    printf("Choose an option: ");
     int choice;
-    printf("╔═══════════════╗\n");
-    printf("║    PONG GAME  ║\n");
-    printf("╠═══════════════╣\n");
-    printf("║ 1. Solo       ║\n");
-    printf("║ 2. Two Players║\n");
-    printf("╚═══════════════╝\n");
-    printf("Choose a mode: ");
     scanf("%d", &choice);
+    if (choice == 3) {
+        printf("You chose to leave. We'll miss you!\n");
+        exit(0);  // Quit game
+    }
     mode = (choice == 2) ? 1 : 0;
 }
 
@@ -224,42 +247,32 @@ void generateObstacles() {
     }
 }
 
-// Update the high scores file
-void updateScores(int score1, int score2) {
-    FILE *file = fopen("highscores.txt", "a");
-    fprintf(file, "Player 1: %d - Player 2: %d\n", score1, score2);
-    fclose(file);
-}
-
-// Display the high scores
-void showHighScores() {
-    FILE *file = fopen("highscores.txt", "r");
-    if (file == NULL) {
-        printf("No scores available.\n");
-        return;
-    }
-    char line[100];
-    printf("High Scores:\n");
-    while (fgets(line, sizeof(line), file)) {
-        printf("%s", line);
-    }
-    fclose(file);
-}
-
 // Main game loop
 int main() {
-    showMenu();  // Choose solo or two players
+    #ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);  // Set UTF-8 for extended characters
+    #else
+        setlocale(LC_ALL, "");  // Fix extended ASCII characters on Unix
+    #endif
+
+    showMenu();  // Show the menu with humor
     generateObstacles();  // Generate obstacles on the field
+    char buffer[4096];  // Double buffer for screen rendering
 
     while (1) {
-        drawBoard();
-        processInput();
-        updateBall();
-        if (mode == 0) moveAI();  // AI movement if solo
-        wait(100);
+        if (!isPaused) {
+            memset(buffer, 0, sizeof(buffer));  // Clear buffer
+            drawBoard(buffer);
+            clearScreen();
+            printf("%s", buffer);  // Render buffer
+            processInput();
+            updateBall();
+            if (mode == 0) moveAI();  // AI movement if solo
+        } else {
+            printf("\nGame is paused. Press 'p' to resume.\n");
+        }
+        wait(100);  // Frame delay
     }
 
-    // Update and show high scores after game ends
-    updateScores(score1, score2);
-    showHighScores();
+    return 0;
 }
