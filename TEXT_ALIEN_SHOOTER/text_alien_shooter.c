@@ -1,64 +1,103 @@
 // Text Alien Shooter
-// v0.5
+// v0.6
 // by Hylst (1996 - 2024 (cleaning code / good practice / comments) )
 // To Do :
-// Change to a cross-platform lib to access terminal functionality. 
+// Affichage jeu de caractères ascii étendu
+// saisie non blocante de touche
+// affichage stable
+// game board 2x large
+// Complete program - debug 
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>  // UNIX
-#include <time.h>
+#ifdef _WIN32
+    #include <windows.h> // Pour Sleep et Beep sous Windows
+#else
+    #include <unistd.h>  // Pour usleep sous Unix
+#endif
 
 #define WIDTH 40
 #define HEIGHT 20
-#define MAX_INVADERS 50
 #define PLAYER '^'
 #define INVADER 'X'
 #define BULLET '|'
 #define EMPTY ' '
 #define WALL '#'
 
+// Structures
 typedef struct {
     int x, y;
 } Position;
 
 typedef struct {
-    Position invaders[MAX_INVADERS];
+    Position invaders[50];
     int count;
-    int direction; // 1 for right, -1 for left
+    int direction; // 1 = droite, -1 = gauche
     int speed;
+    int has_projectiles;
 } InvaderWave;
 
+// Variables globales
 Position player, bullet;
 InvaderWave invaderWave;
 int score = 0, level = 1;
-int gameOver = 0;
-int bulletActive = 0;
+int gameOver = 0, bulletActive = 0;
+char menuChoice = '1';
 
-void initGame() {
-    player.x = WIDTH / 2;
-    player.y = HEIGHT - 1;
-    bulletActive = 0;
-    score = 0;
-    level = 1;
-    gameOver = 0;
-    invaderWave.count = 5;
-    invaderWave.direction = 1;
-    invaderWave.speed = 200000; // Initial speed for invader movement
-    for (int i = 0; i < invaderWave.count; i++) {
-        invaderWave.invaders[i] = (Position){i * 2, 0}; // Initialize invaders in a row
-    }
+// Multiplateforme : Effacer l'écran
+void clearScreen() {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
 }
 
+// Multiplateforme : Délai pour gérer la vitesse du jeu
+void wait(int milliseconds) {
+    #ifdef _WIN32
+        Sleep(milliseconds);
+    #else
+        usleep(milliseconds * 1000); // Conversion de ms en µs pour usleep
+    #endif
+}
+
+void playSound(int frequency, int duration) {
+    #ifdef _WIN32
+        Beep(frequency, duration);
+    #else
+        printf("\a"); // Son par défaut sur Unix (beep dans le terminal)
+    #endif
+}
+
+void shoot() {
+    // Son pour le tir
+    playSound(1000, 100);
+}
+
+void enemyDestroyed() {
+    // Son pour un ennemi détruit
+    playSound(500, 200);
+}
+
+void gameOverSound() {
+    // Son pour Game Over
+    playSound(100, 500);
+}
+
+// Dessiner le tableau de jeu avec bordures
 void drawBoard() {
-    system("clear");
+    clearScreen();
+    printf("╔");
+    for (int i = 0; i < WIDTH; i++) printf("═");
+    printf("╗\n");
+
     for (int y = 0; y < HEIGHT; y++) {
+        printf("║");
         for (int x = 0; x < WIDTH; x++) {
-            if (x == player.x && y == player.y) {
-                printf("%c", PLAYER);
-            } else if (bulletActive && x == bullet.x && y == bullet.y) {
-                printf("%c", BULLET);
-            } else {
+            if (x == player.x && y == player.y) printf("%c", PLAYER);
+            else if (bulletActive && x == bullet.x && y == bullet.y) printf("%c", BULLET);
+            else {
                 int isInvader = 0;
                 for (int i = 0; i < invaderWave.count; i++) {
                     if (invaderWave.invaders[i].x == x && invaderWave.invaders[i].y == y) {
@@ -67,41 +106,19 @@ void drawBoard() {
                         break;
                     }
                 }
-                if (!isInvader) {
-                    printf(" ");
-                }
+                if (!isInvader) printf("%c", EMPTY);
             }
         }
-        printf("\n");
+        printf("║\n");
     }
+
+    printf("╚");
+    for (int i = 0; i < WIDTH; i++) printf("═");
+    printf("╝\n");
     printf("Score: %d | Level: %d\n", score, level);
 }
 
-int kbhit() {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
-
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-    ch = getchar();
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-    if (ch != EOF) {
-        ungetc(ch, stdin);
-        return 1;
-    }
-
-    return 0;
-}
-
+// Gérer l'entrée utilisateur
 void processInput() {
     if (kbhit()) {
         char key = getchar();
@@ -118,93 +135,87 @@ void processInput() {
     }
 }
 
-void moveInvaders() {
+// ... (Fonctions de gestion du jeu comme la gestion des invaders, des collisions, etc.)
+
+// Animation des vagues ennemies (déplacement fluide)
+void animateInvaders() {
     for (int i = 0; i < invaderWave.count; i++) {
         invaderWave.invaders[i].x += invaderWave.direction;
-        if (invaderWave.invaders[i].x <= 0 || invaderWave.invaders[i].x >= WIDTH - 1) {
-            invaderWave.direction = -invaderWave.direction;
-            for (int j = 0; j < invaderWave.count; j++) {
-                invaderWave.invaders[j].y++;
-                if (invaderWave.invaders[j].y >= HEIGHT - 1) {
-                    gameOver = 1; // If invaders reach the bottom
-                    return;
-                }
-            }
+    }
+
+    // Changement de direction aux bords
+    if (invaderWave.invaders[0].x <= 0 || invaderWave.invaders[invaderWave.count - 1].x >= WIDTH - 1) {
+        invaderWave.direction = -invaderWave.direction;
+        for (int i = 0; i < invaderWave.count; i++) {
+            invaderWave.invaders[i].y++;  // Descendre d'une ligne
+        }
+    }
+}
+
+// Gestion des vagues plus complexes (différents types d'attaques)
+void manageWaves() {
+    if (level % 2 == 0) {
+        invaderWave.has_projectiles = 1;  // Ajouter des projectiles pour les vagues paires
+    } else {
+        invaderWave.has_projectiles = 0;
+    }
+
+    // Ajouter d'autres types d'attaques dynamiques selon le niveau
+    if (level > 3) {
+        invaderWave.speed -= 20;  // Réduire la vitesse pour plus de difficulté
+    }
+}
+
+// Interface utilisateur : Menu principal
+void showMenu() {
+    clearScreen();
+    printf("******** ALIEN SHOOTER ********\n");
+    printf("1. Jouer\n");
+    printf("2. Instructions\n");
+    printf("3. Quitter\n");
+    printf("Choisissez une option : ");
+    scanf(" %c", &menuChoice);
+
+    switch (menuChoice) {
+        case '1':
+            clearScreen();
             break;
-        }
+        case '2':
+            clearScreen();
+            printf("Instructions:\n");
+            printf("- Utilisez les touches 'q' et 'd' pour déplacer le joueur.\n");
+            printf("- Tirez avec 'z'.\n");
+            printf("- Tuez tous les envahisseurs pour passer au niveau suivant.\n");
+            printf("- Attention à ne pas vous faire toucher !\n");
+            printf("Appuyez sur une touche pour retourner au menu.\n");
+            getchar();
+            getchar();
+            showMenu();
+            break;
+        case '3':
+            printf("Quitter le jeu...\n");
+            exit(0);
+        default:
+            printf("Option invalide.\n");
+            showMenu();
+            break;
     }
 }
 
-void moveBullet() {
-    if (bulletActive) {
-        bullet.y--;
-        if (bullet.y < 0) {
-            bulletActive = 0; // Bullet goes off screen
-        } else {
-            for (int i = 0; i < invaderWave.count; i++) {
-                if (bullet.x == invaderWave.invaders[i].x && bullet.y == invaderWave.invaders[i].y) {
-                    // Bullet hits an invader
-                    for (int j = i; j < invaderWave.count - 1; j++) {
-                        invaderWave.invaders[j] = invaderWave.invaders[j + 1];
-                    }
-                    invaderWave.count--;
-                    score += 10;
-                    bulletActive = 0;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-void nextWave() {
-    level++;
-    invaderWave.count += 2; // More invaders each wave
-    invaderWave.speed -= 20000; // Invaders move faster each wave
-    invaderWave.direction = 1;
-    for (int i = 0; i < invaderWave.count; i++) {
-        invaderWave.invaders[i] = (Position){i * 2 % WIDTH, 0}; // Reinitialize invaders
-    }
-}
-
-void displayWelcomeMessage() {
-    printf("********************************************\n");
-    printf("*          WELCOME TO ALIEN SHOOTER        *\n");
-    printf("********************************************\n");
-    printf("Controls:\n");
-    printf("  Move Left  : 'q'\n");
-    printf("  Move Right : 'd'\n");
-    printf("  Shoot      : 'z'\n\n");
-    printf("Press any key to start the game...\n");
-    getchar();
-}
 
 int main() {
-    srand(time(0));
-    displayWelcomeMessage();
-    initGame();
-
+    // Initialiser le jeu et démarrer la boucle principale
+    //initGame();
+    showMenu();
     while (!gameOver) {
         drawBoard();
+        animateInvaders();  // Animation des vagues ennemies
+        manageWaves();      // Gérer la complexité des vagues
         processInput();
-        moveBullet();
-
-        // Move invaders at their current speed
-        static int invaderMoveTimer = 0;
-        if (++invaderMoveTimer > invaderWave.speed / 10000) {
-            moveInvaders();
-            invaderMoveTimer = 0;
-        }
-
-        // If all invaders are eliminated, go to the next wave
-        if (invaderWave.count == 0) {
-            nextWave();
-        }
-
-        usleep(10000); // Main game loop delay - LINUX / UNIX
-        //Sleep(10); // Main game loop delay
+        //updateGame();
+        wait(100);  // Délai pour ralentir le jeu
     }
 
-    printf("Game Over! Final Score: %d\n", score);
+    printf("Game Over! Score: %d\n", score);
     return 0;
 }
