@@ -1,6 +1,8 @@
 // TEXT SNAKE 
-// v0.7
+// v0.8
 // by Hylst (1994 - 2024 (cleaning code / good practice / comments) )
+// To Do :
+// Border is out of game board
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,14 +15,15 @@
     #include <fcntl.h>
 #endif
 
-#define WIDTH 80  // Double la largeur
-#define HEIGHT 25
+#define WIDTH 40  // Largeur de la zone de jeu (avec un cadre de 2 colonnes en plus)
+#define HEIGHT 20  // Hauteur de la zone de jeu (avec un cadre de 2 lignes en plus)
 #define SNAKE_BODY 'O'
 #define SNAKE_HEAD '@'
-#define FOOD 'X'
+#define FOOD '*'
 #define EMPTY ' '
 #define OBSTACLE '#'
 
+// Structures pour la position
 typedef struct {
     int x, y;
 } Position;
@@ -29,12 +32,15 @@ Position snake1[100];
 Position snake2[100];
 int snakeLength1 = 5, snakeLength2 = 5;
 Position food;
-Position obstacles[5];
-int directionX1 = 1, directionY1 = 0;  // Joueur 1 : Initialement vers la droite
-int directionX2 = 0, directionY2 = 0;  // Joueur 2 : Initialement immobile
+Position obstacles[100];
+int numObstacles = 5;
+int directionX1 = 1, directionY1 = 0;
+int directionX2 = 0, directionY2 = 0;
 int gameOver = 0;
-int speed = 200;
+int speed = 300;
 int multiplayer = 0;  // 0 = Solo, 1 = VS Humain, 2 = VS AI
+int paused = 0;  // 0 = non en pause, 1 = en pause
+int level = 1;  // Niveau initial
 
 // Cross-platform clear screen
 void clearScreen() {
@@ -99,20 +105,17 @@ void showIntroduction() {
     clearScreen();
     printf("=== SNAKE GAME ===\n\n");
     printf("Bienvenue dans le jeu de Snake !\n");
-    printf("Fonctionnalités :\n");
-    printf("- Solo ou mode multijoueur (1 vs 1 humain ou IA)\n");
-    printf("- Déplacement fluide et croissance du serpent en mangeant des aliments\n");
-    printf("- Sons pour différents événements (manger, collisions, etc.)\n");
-    printf("\nContrôles :\n");
-    printf("Joueur 1 :\n");
-    printf("  Z : Haut\n  S : Bas\n  Q : Gauche\n  D : Droite\n");
-    printf("Joueur 2 :\n");
-    printf("  Flèche Haut : Haut\n  Flèche Bas : Bas\n  Flèche Gauche : Gauche\n  Flèche Droite : Droite\n");
+    printf("Mode Solo :\n");
+    printf("  - Contrôlez un serpent avec ZQSD pour manger de la nourriture et grandir.\n");
+    printf("  - Le jeu devient plus difficile au fur et à mesure avec des obstacles supplémentaires et une vitesse accrue.\n\n");
+    printf("Mode Duo :\n");
+    printf("  - VS Humain : Joueur 1 contrôle avec ZQSD et Joueur 2 avec les flèches.\n");
+    printf("  - VS AI : Jouez contre une IA simple qui tente aussi de manger la nourriture.\n");
     printf("\nAppuyez sur une touche pour continuer...");
     getInput();
 }
 
-// Menu principal pour choisir solo ou multijoueur
+// Menu principal pour choisir le mode de jeu
 int displayMenu() {
     int choice;
     clearScreen();
@@ -139,10 +142,13 @@ void initGame() {
     snakeLength1 = 5;
     directionX1 = 1; directionY1 = 0;
     snakeLength2 = 5;
-    directionX2 = 0; directionY2 = 0;  // Joueur 2 inactif jusqu'à l'entrée
+    directionX2 = 0; directionY2 = 0;
 
     gameOver = 0;
-    speed = 200;
+    speed = 300;
+    paused = 0;
+    level = 1;
+    numObstacles = 5;
 
     // Initialiser la position du serpent 1
     for (int i = 0; i < snakeLength1; i++) {
@@ -157,21 +163,42 @@ void initGame() {
     }
 
     // Initialiser la nourriture et les obstacles
-    food.x = rand() % WIDTH;
-    food.y = rand() % HEIGHT;
+    food.x = rand() % (WIDTH - 2) + 1;  // Éviter les bords
+    food.y = rand() % (HEIGHT - 2) + 1;
 
-    for (int i = 0; i < 5; i++) {
-        obstacles[i].x = rand() % WIDTH;
-        obstacles[i].y = rand() % HEIGHT;
+    for (int i = 0; i < numObstacles; i++) {
+        obstacles[i].x = rand() % (WIDTH - 2) + 1;
+        obstacles[i].y = rand() % (HEIGHT - 2) + 1;
     }
+}
+
+// Dessiner le cadre
+void drawFrame() {
+    for (int x = 0; x < WIDTH; x++) {
+        printf("-");
+    }
+    printf("\n");
+
+    for (int y = 1; y < HEIGHT - 1; y++) {
+        printf("|");
+        for (int x = 1; x < WIDTH - 1; x++) {
+            printf("%c", EMPTY);
+        }
+        printf("|\n");
+    }
+
+    for (int x = 0; x < WIDTH; x++) {
+        printf("-");
+    }
+    printf("\n");
 }
 
 // Afficher le plateau de jeu
 void drawBoard() {
     clearScreen();
-    printf("Joueur 1 : ZQSD | Joueur 2 : Flèches (si activé)\n");
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
+    drawFrame();
+    for (int y = 1; y < HEIGHT - 1; y++) {
+        for (int x = 1; x < WIDTH - 1; x++) {
             int isSnake1 = 0, isSnake2 = 0, isObstacle = 0;
 
             // Dessiner le serpent 1
@@ -200,7 +227,7 @@ void drawBoard() {
             } 
             // Dessiner les obstacles
             else {
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < numObstacles; i++) {
                     if (x == obstacles[i].x && y == obstacles[i].y) {
                         printf("%c", OBSTACLE);
                         isObstacle = 1;
@@ -208,15 +235,15 @@ void drawBoard() {
                     }
                 }
 
-                // Si pas de serpent ou de nourriture, dessiner un espace vide
+                // Si pas de serpent ou de nourriture, laisser vide
                 if (!isSnake1 && !isSnake2 && !isObstacle) {
-                    printf("%c", EMPTY);
+                    printf(" ");
                 }
             }
         }
         printf("\n");
     }
-    printf("Score Joueur 1: %d | Score Joueur 2: %d\n", snakeLength1 - 5, snakeLength2 - 5);
+    printf("Score Joueur 1: %d | Score Joueur 2: %d | Niveau: %d\n", snakeLength1 - 5, snakeLength2 - 5, level);
 }
 
 // Mettre à jour la position du serpent et gérer les collisions
@@ -224,14 +251,14 @@ void updateSnake(Position snake[], int *snakeLength, int directionX, int directi
     Position newHead = {snake[0].x + directionX, snake[0].y + directionY};
 
     // Vérification des collisions avec les murs
-    if (newHead.x < 0 || newHead.x >= WIDTH || newHead.y < 0 || newHead.y >= HEIGHT) {
+    if (newHead.x <= 0 || newHead.x >= WIDTH - 1 || newHead.y <= 0 || newHead.y >= HEIGHT - 1) {
         gameOver = 1;
         playSound(200, 500);
         return;
     }
 
     // Vérification des collisions avec les obstacles
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < numObstacles; i++) {
         if (newHead.x == obstacles[i].x && newHead.y == obstacles[i].y) {
             gameOver = 1;
             playSound(200, 500);
@@ -242,10 +269,14 @@ void updateSnake(Position snake[], int *snakeLength, int directionX, int directi
     // Vérification si le serpent mange la nourriture
     if (newHead.x == food.x && newHead.y == food.y) {
         (*snakeLength)++;
-        food.x = rand() % WIDTH;
-        food.y = rand() % HEIGHT;
+        food.x = rand() % (WIDTH - 2) + 1;
+        food.y = rand() % (HEIGHT - 2) + 1;
         playSound(1000, 100);
         speed -= 10;
+        level++;
+        numObstacles++;  // Ajouter un obstacle à chaque niveau
+        obstacles[numObstacles - 1].x = rand() % (WIDTH - 2) + 1;
+        obstacles[numObstacles - 1].y = rand() % (HEIGHT - 2) + 1;
     }
 
     // Mise à jour du corps du serpent
@@ -287,6 +318,8 @@ void processInput() {
             case 80: if (directionY2 == 0) { directionX2 = 0; directionY2 = 1; } break;   // Flèche bas
             case 75: if (directionX2 == 0) { directionX2 = -1; directionY2 = 0; } break;  // Flèche gauche
             case 77: if (directionX2 == 0) { directionX2 = 1; directionY2 = 0; } break;   // Flèche droite
+            // Pause
+            case 'p': paused = !paused; break;
         }
     }
 }
@@ -294,16 +327,21 @@ void processInput() {
 // Boucle principale du jeu
 void gameLoop() {
     while (!gameOver) {
-        drawBoard();
-        processInput();
-        updateSnake(snake1, &snakeLength1, directionX1, directionY1);
-        if (multiplayer == 1) {  // VS Humain
-            updateSnake(snake2, &snakeLength2, directionX2, directionY2);
-        } else if (multiplayer == 2) {  // VS AI
-            controlAI(snake2, &directionX2, &directionY2);
-            updateSnake(snake2, &snakeLength2, directionX2, directionY2);
+        if (!paused) {
+            drawBoard();
+            processInput();
+            updateSnake(snake1, &snakeLength1, directionX1, directionY1);
+            if (multiplayer == 1) {  // VS Humain
+                updateSnake(snake2, &snakeLength2, directionX2, directionY2);
+            } else if (multiplayer == 2) {  // VS AI
+                controlAI(snake2, &directionX2, &directionY2);
+                updateSnake(snake2, &snakeLength2, directionX2, directionY2);
+            }
+            wait(speed);
+        } else {
+            printf("PAUSE - Appuyez sur 'P' pour reprendre.\n");
+            processInput();
         }
-        wait(speed);
     }
     printf("Game Over! Scores : Joueur 1: %d, Joueur 2: %d\n", snakeLength1 - 5, snakeLength2 - 5);
 }
