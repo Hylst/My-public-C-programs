@@ -1,5 +1,7 @@
 # 🎮 L'Épopée Loufoque du Héros Malgré Lui 🎮
 
+UNFINISHED
+
 Bienvenue dans **L'Épopée Loufoque du Héros Malgré Lui**, un jeu de rôle textuel hilarant où vous incarnez un aventurier... disons, un peu maladroit ! 🎩 Ce RPG textuel en **C** vous propose d'explorer un univers déjanté rempli de créatures absurdes, de quêtes secondaires farfelues et de personnages hauts en couleur. 💥
 
 ## 🛠️ Installation et Compilation
