@@ -1,0 +1,47 @@
+  JEU D AVENTURE - BEAT THEM ALL - DE PLATEFORME EN ASCII ART 
+========================================================================
+
+                                       ============                                     
+                                     
+                               =======                   ====
+                                                                  B
+                       =======                                  =====
+                   L                       ~*~
+                 ======     =======     =========
+                 
+                  >8-*
+ _O_          ===========  
+/||\         =           =     D|
+ /\    ==   =             =    /\                  ^^^^^       ~*~
+=========================================================================
+
+Avec 
+
+ _O_      
+/||\  le héro en ascii art   
+ /\ 
+
+
+= sol, plafond et plateformes
+
+  =          = 
+ =  escaliers =
+=              =
+
+^^^^^  pics mortels au sol
+
+>8-*  ennemi qui tire
+
+ o
+@|  ennemi qui frappe et avance lentement
+/\
+
+
+~*~  ennemi qui empoisonne au contact et se déplace plus vite
+
+
+G Argent
+
+B Boost de tir (+1)
+L Boost de vie (+1)
+
